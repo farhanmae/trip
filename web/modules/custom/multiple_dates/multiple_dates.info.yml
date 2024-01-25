@@ -1,0 +1,14 @@
+name: Multiple Dates
+type: module
+description: Multiple Dates form element using the jQuery UI datetimepicker.
+core: '8.x'
+core_version_requirement: ^8 || ^9 || ^10
+package: Multiple Dates
+dependencies:
+  - jquery_ui_datepicker
+  - drupal:field
+
+# Information added by Drupal.org packaging script on 2022-11-16
+version: '1.1.0'
+project: 'multiple_dates'
+datestamp: 1668620241

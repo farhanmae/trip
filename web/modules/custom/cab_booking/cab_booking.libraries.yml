@@ -1,0 +1,6 @@
+cab_booking:
+  version: 1.x
+  js:
+    js/cab_booking.js: {}
+  dependencies:
+    - core/jquery

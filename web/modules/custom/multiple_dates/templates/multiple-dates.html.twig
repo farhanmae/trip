@@ -1,0 +1,16 @@
+{{ attach_library('multiple_dates/multiple_dates') }}
+{% set display_layout = other_data.display_layout %}
+	{% if display_layout == 'calendar_view' %}
+		<div class="multiple-dates-calendar" data-number-of-months="{{ other_data.number_of_months }}" data-dates="{{ multiple_dates }}">
+		</div>
+	{% else %}
+		{% if display_layout == 'comma_separated' %}
+			{{ other_data.formatted_dates|raw }}
+		{% else %}
+			<ul class="multiple-dates-listing">
+				{% for k, item in other_data.formatted_dates %}
+					<li>{{ item }}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+	{% endif %}

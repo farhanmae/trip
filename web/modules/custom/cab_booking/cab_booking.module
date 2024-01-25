@@ -1,0 +1,125 @@
+<?php
+    
+    use Drupal\commerce_store\Entity\StoreType;
+    use Drupal\commerce_product\Entity\ProductType;
+    use Drupal\commerce_product\Entity\ProductVariationType;
+    use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+    use Drupal\Core\Entity\EntityInterface;
+    use Drupal\Core\Url;
+    use Drupal\Core\Form\FormStateInterface;
+    use Drupal\commerce_cart\CartManagerInterface;
+    use Drupal\commerce_order\Form\OrderItemAddForm;
+    use Drupal\commerce_order\Form\OrderItemAddFormInterface;
+    use Drupal\Core\Datetime\DrupalDateTime;
+    use Drupal\commerce_order\Entity\OrderInterface;
+    use Drupal\commerce_order\Entity\OrderItemInterface;
+    use Drupal\Core\Database\Database;
+    use Drupal\commerce_order\Entity\Order;
+    use Drupal\commerce_order\Entity\OrderItem;
+    use Drupal\Core\Entity\Query\QueryFactory;
+
+
+    
+    function cab_booking_form_commerce_order_item_add_to_cart_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+
+        // Add your custom button.
+        $form['actions'] = [
+            '#type' => 'submit',
+            '#value' => t('Check Availability & Book'),
+            // '#validate' => ['cab_booking_availability_check'],
+            '#attributes' => [
+                'class' => [
+                    'button',
+                    'button--secondary',
+                    'js-form-submit',
+                    'form-submit',
+                    'btn',
+                ],  
+            ],
+            '#access' => TRUE,  // Show the custom button.
+            '#weight' => 50,
+            // Add any other properties or attributes as needed.
+        ];
+        $form['#validate'][] = 'cab_booking_availability_check';
+
+    }
+
+
+    /**
+     * Custom submit handler for the add to cart form.
+     */
+    function cab_booking_availability_check($form, \Drupal\Core\Form\FormStateInterface $form_state) {
+        // Fetch values from the product entity.
+        $product_id = $form_state->get('product')->id(); // Assuming you have the product entity available.
+        $product = \Drupal\commerce_product\Entity\Product::load($product_id);
+        $timezone = new DateTimeZone('Asia/Kolkata');
+        $availbility = $product->get('field_availability')->value;
+        $stock = intval($availbility);
+        $variation_id = $product->getVariationIds(); 
+        
+        // Fetching unavialable dates
+        $unavailable = $product->get('field_unavailable_dates');
+        $unavailable_dates_string = $unavailable->multiple_dates;
+        
+        // Convert the string of unavailable dates to an array.
+        $unavailable_dates = explode(', ', $unavailable_dates_string);
+    
+        // Fetch values from the add to cart form.
+        $selected = $form_state->getValue(['field_date']);
+        // Extract all dates from the date range field.
+        $selected_dates = [];
+        $start_date = $selected[0]['value']->setTimezone($timezone)->format('Y-m-d');
+        $end_date = $selected[0]['end_value']->setTimezone($timezone)->format('Y-m-d');
+        // Include dates in between start and end dates.
+        $selected_dates = getDatesBetween($start_date, $end_date);
+        $selected_dates_order = array_fill_keys($selected_dates, $stock);
+
+        $booked_days = count(array_unique($selected_dates));
+
+        // Check for common dates between selected and unavailable dates.
+        $availability_check = array_intersect($selected_dates, $unavailable_dates);
+
+        // Get the selected dates and product variation ID from the form state.
+        $booking_date = $form_state->getValue(['field_date']);
+
+        // Perform your custom validation logic here.
+        // For demonstration purposes, let's assume the maximum allowed quantity is 5.
+        $max_quantity_per_day = $stock;
+
+    
+        dpm($stock);
+        // dpm($product_id);
+        // dpm($unavailable_dates);
+        // dpm($selected);
+        // dpm($end_date);
+        // dpm($selected_dates_order);
+        // dpm($availability_check);
+        
+        // If there are common dates, set an error message.
+        if (!empty($availability_check)) {
+            $form_state->setErrorByName('field_date', t('No cabs available for the selected date. Contact customer care if you still want to continue.'));
+            $logger = \Drupal::logger('Cab Booking');
+            $logger->notice('Cab not available');
+        }else{
+            $logger = \Drupal::logger('Cab Booking');
+            $logger->notice('Cab added');
+        }
+    }
+  
+
+    function getDatesBetween($start_date, $end_date) {
+        $dates = [];
+        $current_date = strtotime($start_date);
+        $end_timestamp = strtotime($end_date);
+
+        while ($current_date <= $end_timestamp) {
+            $dates[] = date('Y-m-d', $current_date);
+            $current_date = strtotime('+1 day', $current_date);
+        }
+
+        return $dates;
+    }
+
+    
+
+    

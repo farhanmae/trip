@@ -1,0 +1,16 @@
+multiple_dates:
+  version: 1.x
+  js:
+    js/jquery-ui.multidatespicker.js: {}
+    js/multiple-dates.js: {}
+  css:
+    theme:
+      css/multiple-dates.css: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.ui
+    - core/jquery.ui.widget
+    - jquery_ui_datepicker/datepicker
+    - core/drupal
+    - core/drupalSettings
+    - core/once

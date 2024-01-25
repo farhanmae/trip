@@ -1,0 +1,58 @@
+<?php
+
+/**
+ * @file
+ * Contains Drupal\multiple_dates\multiple_dates.module.
+ */
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function multiple_dates_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.multiple_dates':
+    $text = file_get_contents(__DIR__ . '/README.md');
+    if (!\Drupal::moduleHandler()->moduleExists('markdown')) {
+      return '<pre>' . Html::escape($text) . '</pre>';
+    }
+    else {
+        // Use the Markdown filter to render the README.
+      $filter_manager = \Drupal::service('plugin.manager.filter');
+      $settings = \Drupal::configFactory()->get('markdown.settings')->getRawData();
+      $config = ['settings' => $settings];
+      $filter = $filter_manager->createInstance('markdown', $config);
+      return $filter->process($text, 'en');
+    }
+  }
+  return NULL;
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function multiple_dates_theme($existing, $type, $theme, $path) {
+  return array(
+    'multiple_dates' => array(
+      'variables' => array(
+        'multiple_dates' => NULL,
+        'other_data' => NULL,
+      )
+    )
+  );
+}
+
+/**
+ * Create formatted date
+ * @param  [type] $date_value
+ * @param  [type] $date_format
+ * @return [type]
+ */
+function get_formatted_date($date_value, $date_format) {
+  $date = date_create($date_value);
+  $formatted_date = date_format($date,$date_format);
+  return $formatted_date;
+}
